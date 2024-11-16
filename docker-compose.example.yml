@@ -1,0 +1,6 @@
+version: "3.3"
+services:
+  b-hunters-gospider:
+    build: ./
+    volumes:
+    - ./b-hunters.ini:/etc/b-hunters/b-hunters.ini
