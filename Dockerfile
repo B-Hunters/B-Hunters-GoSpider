@@ -34,7 +34,7 @@ COPY --from=build /usr/local/go /usr/local/go
 COPY --from=build /root/go/bin /root/go/bin
 COPY --from=build /root/.gf/ /root/.gf/
 
-RUN pip install --no-cache-dir b-hunters==1.1.0 uro
+RUN pip install --no-cache-dir b-hunters==1.1.4 uro
 
 # Set environment variables for Go
 ENV PATH="$PATH:/usr/local/go/bin:/root/go/bin:/usr/local/go/bin:$HOME/.local/bin"
