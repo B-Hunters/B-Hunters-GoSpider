@@ -109,7 +109,7 @@ class spider(BHunters):
         url = task.payload["data"]
         domain = task.payload["subdomain"]
         db=self.db
-        collection = db["domains"]
+        
         
         try:
                 
@@ -119,9 +119,12 @@ class spider(BHunters):
             domain = domain.rstrip('/')
             self.update_task_status(domain,"Started")
             result,resultunique,spiderfullresults=self.scan(url)
+            self.waitformongo()
+            db=self.db
             urlstripped = re.sub(r'^https?://', '', url)
             urlstripped = urlstripped.rstrip('/')
             spiderfullresults = list(set(spiderfullresults))
+            collection = db["domains"]
             existing_document = collection.find_one({"Domain": domain})
             new_links=[]
             if existing_document:
