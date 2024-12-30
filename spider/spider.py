@@ -7,6 +7,7 @@ from b_hunters.bhunter import BHunters
 from karton.core import Task
 import shutil
 import re
+from bson.objectid import ObjectId
 
 class spider(BHunters):
     """
@@ -109,7 +110,8 @@ class spider(BHunters):
         url = task.payload["data"]
         domain = task.payload["subdomain"]
         db=self.db
-        
+        report_id=task.payload_persistent["report_id"]    
+        scan_id=task.payload_persistent["scan_id"]
         
         try:
                 
@@ -124,19 +126,20 @@ class spider(BHunters):
             urlstripped = re.sub(r'^https?://', '', url)
             urlstripped = urlstripped.rstrip('/')
             spiderfullresults = list(set(spiderfullresults))
-            collection = db["domains"]
-            existing_document = collection.find_one({"Domain": domain})
+            collection = db["links"]
+            existing_document = collection.find_one({"report_id":ObjectId(report_id),"source":self.identity})
             new_links=[]
             if existing_document:
-                existing_links = existing_document.get("Links", {}).get(self.identity, [])
+                existing_links = existing_document.get("Links", [])
                 new_links = [link for link in spiderfullresults if link not in existing_links]
-            
+            else:
+                new_links=spiderfullresults
             if new_links !=[] and new_links!=[url]:
                 resultdata = "\n".join(map(lambda x: str(x), new_links)).encode()
                 self.log.info("Uploading data of "+url)
-                senddata=self.backend.upload_object("bhunters","spider_"+self.encode_filename(urlstripped),resultdata)
+                senddata=self.backend.upload_object("bhunters","spider_"+scan_id+"_"+self.encode_filename(urlstripped),resultdata)
                 
-                collection.update_one({"Domain": domain}, {"$push": {f"Links.{self.identity}": {"$each": new_links}}})
+                collection.update_one({"report_id": ObjectId(report_id),"source":self.identity}, {"$push": {f"Links": {"$each": new_links}}},upsert=True)
                 tag_task = Task(
                     {"type": "paths", "stage": "scan"},
                     payload={"data": urlstripped,
@@ -153,15 +156,8 @@ class spider(BHunters):
                 
                 # update_result = collection.update_one({"Domain": domain}, {'$push': {'Vulns': result}})
                 self.send_discord_webhook("Spider found new vulns for "+domain,result,"main")
-            # Get domain_id from domain
             collection = db["domains"]
 
-            domain_document = collection.find_one({"Domain": domain})
-            if domain_document:
-                domain_id = domain_document["_id"]
-            else:
-                self.log.warning(f"No document found for domain: {domain}")
-                domain_id = None
             jsdata=[]
             for i in resultunique:
                 
@@ -171,7 +167,7 @@ class spider(BHunters):
                         if self.checkjs(i):
 
                             collection2 = db["js"]
-                            existing_document = collection2.find_one({"url": i})
+                            existing_document = collection2.find_one({"report_id":ObjectId(report_id),"url": i})
                             if existing_document is None:
                                 jsdata.append(i)
                                 tag_task = Task(
@@ -193,12 +189,11 @@ class spider(BHunters):
                         if self.checkjs(i):
 
                             collection2 = db["js"]
-                            existing_document = collection2.find_one({"url": i})
+                            existing_document = collection2.find_one({"report_id":ObjectId(report_id),"url": i})
                             if existing_document is None:
                                 tag_task = Task(
                                     {"type": "js", "stage": "new"},
                                     payload={"data": url,
-                                    "domain_id":domain_id,
                                     "file": i,
                                     "module":"spider"
                                     }
