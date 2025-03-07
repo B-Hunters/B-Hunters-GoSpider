@@ -194,6 +194,7 @@ class spider(BHunters):
                                 tag_task = Task(
                                     {"type": "js", "stage": "new"},
                                     payload={"data": url,
+                                    "subdomain":domain,
                                     "file": i,
                                     "module":"spider"
                                     }
