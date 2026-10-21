@@ -144,8 +144,7 @@ class spider(BHunters):
                     {"type": "paths", "stage": "scan"},
                     payload={"data": urlstripped,
                             "subdomain":domain,
-                    "source":"spider",
-                    "type":"file"
+                    "source":"spider"
                     }
                 )
                 self.send_task(tag_task)
