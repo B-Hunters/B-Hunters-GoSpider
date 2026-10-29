@@ -2,11 +2,14 @@
 domain=$1
 targetfolder=$2
 resultfolder=$3
+# Every further argument is a gospider option - the session headers of
+# the target, for instance.  They are passed on to gospider unchanged.
+shift 3
 mkdir $resultfolder
-gospider -s $1 -o $2 -t 4 -c 10 -d 4 -m 6   --no-redirect
-gospider -s $1 -t 20 --robots --sitemap --js -c 10 -d 4 -m 6  --json >> "$resultfolder/spiderall.json"
-cat $2/* | grep -o -E "(([a-zA-Z][a-zA-Z0-9+-.]*\:\/\/)|mailto|data\:)([a-zA-Z0-9\.\&\/\?\:@\+-\_=#%;,])*" | sort -u | qsreplace -a | grep "$1" > "$resultfolder/tmp-GoSpider.txt"
-cat $2/*  | grep -o -E "(([a-zA-Z][a-zA-Z0-9+-.]*\:\/\/)|mailto|data\:)([a-zA-Z0-9\.\&\/\?\:@\+-\_=#%;,])*" | sort -u | uro| tee -a "$resultfolder/uniqueurls.txt"
+gospider -s $domain -o $targetfolder -t 4 -c 10 -d 4 -m 6   --no-redirect "$@"
+gospider -s $domain -t 20 --robots --sitemap --js -c 10 -d 4 -m 6  --json "$@" >> "$resultfolder/spiderall.json"
+cat $targetfolder/* | grep -o -E "(([a-zA-Z][a-zA-Z0-9+-.]*\:\/\/)|mailto|data\:)([a-zA-Z0-9\.\&\/\?\:@\+-\_=#%;,])*" | sort -u | qsreplace -a | grep "$domain" > "$resultfolder/tmp-GoSpider.txt"
+cat $targetfolder/*  | grep -o -E "(([a-zA-Z][a-zA-Z0-9+-.]*\:\/\/)|mailto|data\:)([a-zA-Z0-9\.\&\/\?\:@\+-\_=#%;,])*" | sort -u | uro| tee -a "$resultfolder/uniqueurls.txt"
 sed "s/\?.*//" "$resultfolder/tmp-GoSpider.txt" | sort -u | sed -e 's/$/\?/' > "$resultfolder/tmp-LivePathsQuery.txt"
 cat "$resultfolder/tmp-LivePathsQuery.txt" "$resultfolder/tmp-GoSpider.txt" | sort -u | qsreplace -a > "$resultfolder/paths.txt"
 gf ssrf < "$resultfolder/paths.txt" > "$resultfolder/server-side-request-forgery.txt"
