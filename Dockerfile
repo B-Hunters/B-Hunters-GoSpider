@@ -38,7 +38,7 @@ COPY --from=build /root/.gf/ /root/.gf/
 # release: a worker that calls auth_headers(task) against a release that
 # does not have it fails inside the scan.  scripts/build_workers.sh passes
 # the local wheel; the default is the published release.
-ARG B_HUNTERS_WHEEL=b-hunters==1.4.0
+ARG B_HUNTERS_WHEEL=b-hunters==1.4.1
 RUN pip install --no-cache-dir ${B_HUNTERS_WHEEL} uro
 
 # Set environment variables for Go
