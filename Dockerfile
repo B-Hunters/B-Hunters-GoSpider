@@ -27,7 +27,7 @@ RUN git clone https://github.com/1ndianl33t/Gf-Patterns /root/gf-patterns/
 RUN mv /root/gf-patterns/*.json /root/.gf/
 
 # Runtime Stage (final smaller image using Python slim)
-FROM python:3.12-slim
+FROM python@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
 
 # Copy Go binaries and tools from the build stage
 COPY --from=build /usr/local/go /usr/local/go
